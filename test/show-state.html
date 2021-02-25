@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+	<style>
+		body {
+			font-family: sans-serif;
+		}
+		#mute {
+			margin: auto;
+			margin-top:2em;
+			width: 20%;
+			padding: 1em;
+			color: white;
+		}
+		.muted {
+			background-color: darkred;
+		}
+		.not-muted {
+			background-color: darkolivegreen;
+		}
+	</style>
+	<body>
+		<div id='mute'></div>
+	</body>
+	<script>
+		let isMuted = false;
+		setMute(isMuted);
+		document.addEventListener('keydown', evt => {
+			const { ctrlKey, shiftKey, code } = evt;
+			if (ctrlKey && shiftKey && code == 'KeyM') {
+				setMute(!isMuted);
+				evt.preventDefault();
+			}
+			console.log(evt);
+		});
+		document.getElementById('mute').addEventListener('click', evt => setMute(!isMuted));
+		function setMute(value) {
+			isMuted = value;
+			var div = document.getElementById('mute');
+			div.className = isMuted ? 'muted' : 'not-muted';
+			div.innerText = isMuted ? 'Muted' : 'Not Muted';
+		}
+	</script>
+</html>
