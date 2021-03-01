@@ -1,71 +1,79 @@
 #include <Arduino.h>
 
-#include <Adafruit_DotStar.h>
 #include <Bounce2.h>
 #include <Keyboard.h>
 
-#define NUMPIXELS 1 
-#define DATAPIN   7
-#define CLOCKPIN  8
+#define BTN1 16
+#define BTN2 14
+#define BTN3 18
+#define LED1 9
+#define LED2 6
+#define LED3 10
 
-#define BTN1 4
-#define BTN2 3
-#define LED 13
-
-Adafruit_DotStar strip(NUMPIXELS, DATAPIN, CLOCKPIN, DOTSTAR_BRG);
 Bounce2::Button b1 = Bounce2::Button();
 Bounce2::Button b2 = Bounce2::Button();
-static bool isMuted = true;
+Bounce2::Button b3 = Bounce2::Button();
+static bool isPcMuted = true;
 
-void setColor(uint8_t r, uint8_t g, uint8_t b);
-
-
+void setInitialMute(bool value) {
+ isPcMuted = value;
+ analogWrite(LED1, value ? 127 : 0);
+ analogWrite(LED2, value ? 0 : 127);
+}
 
 void setup() {
-  strip.begin();
-  strip.setBrightness(80);
-	setColor(0, 0x44, 0);
-	digitalWrite(LED, isMuted ? HIGH : LOW);
 	b1.attach(BTN1, INPUT_PULLUP);
 	b2.attach(BTN2, INPUT_PULLUP);
+	b3.attach(BTN3, INPUT_PULLUP);
+	Serial.begin(115200);
 	Keyboard.begin();
+	setInitialMute(true);
 }
 
-void setColor(uint8_t r, uint8_t g, uint8_t b) {
-	strip.setPixelColor(0, strip.gamma32(strip.Color(g, r, b)));
-	strip.show();
+void setLed(uint8_t pin, bool isOn) {
+	analogWrite(pin, isOn ? 255 : 0);
 }
-
 
 void setMute(bool value) {
-	if (value != isMuted) {
-		isMuted = value;
-		digitalWrite(LED, value ? HIGH : LOW);
+	if (value != isPcMuted) {
+		isPcMuted = value;
 		Keyboard.press(KEY_LEFT_CTRL);
 		Keyboard.press(KEY_LEFT_SHIFT);
 		Keyboard.press('M');
-		delay(80);
+		delay(30);
 		Keyboard.releaseAll();
 	}
 }
 
+
 void loop() {
 	b1.update();
 	b2.update();
+	b3.update();
 
 	if(b1.fell()) {
-		setMute(true);
-		setColor(0, 0, 0x66);
+		setMute(false);
+		analogWrite(LED1, 127);
+		analogWrite(LED2, 0);
 	}
 	if(b1.rose()) {
-		setMute(false);
+		setMute(true);
+		analogWrite(LED1, 255);
 	}
 
 	if(b2.fell()) {
-		setColor(0, 0x44, 0);
-		setMute(false);
+		setMute(true);
+		analogWrite(LED1, 0);
+		analogWrite(LED2, 127);
 	}
 	if(b2.rose()) {
-		setMute(true);
+		setMute(false);
+		analogWrite(LED2, 255);
 	}
+
+	if(b3.fell()) {
+		setInitialMute(!isPcMuted);
+	}
+
+	analogWrite(LED3, isPcMuted ? 127 : 0);
 }
